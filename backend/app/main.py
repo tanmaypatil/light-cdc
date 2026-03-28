@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.core.poller import Poller
 from app.models.watch_config import WatchConfig
-from app.api import environments, poll_runs, changes, rollback, history
+from app.api import environments, poll_runs, changes, rollback, history, playground
 
 logging.basicConfig(
     level=settings.log_level,
@@ -54,6 +54,7 @@ app.include_router(poll_runs.router, prefix=PREFIX)
 app.include_router(changes.router, prefix=PREFIX)
 app.include_router(rollback.router, prefix=PREFIX)
 app.include_router(history.router, prefix=PREFIX)
+app.include_router(playground.router, prefix=PREFIX)
 
 
 def get_poller() -> Poller:

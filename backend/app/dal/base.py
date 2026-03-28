@@ -20,6 +20,14 @@ class BaseDAL(ABC):
         """Return all rows from schema.table, excluding specified columns."""
 
     @abstractmethod
+    def fetch_table_schema(self, schema: str, table: str) -> list[dict]:
+        """Return column metadata from information_schema."""
+
+    @abstractmethod
+    def fetch_rows(self, schema: str, table: str) -> list[dict]:
+        """Return up to 100 rows from schema.table."""
+
+    @abstractmethod
     def execute_dml(self, sql: str, params: dict) -> None:
         """Execute a single DML statement (UPDATE / INSERT / DELETE) for rollback."""
 

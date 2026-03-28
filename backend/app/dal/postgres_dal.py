@@ -28,6 +28,22 @@ class PostgresDAL(BaseDAL):
         exclude_set = set(exclude_columns)
         return [{k: v for k, v in row.items() if k not in exclude_set} for row in rows]
 
+    def fetch_table_schema(self, schema: str, table: str) -> list[dict]:
+        with self._conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(
+                """SELECT column_name, data_type, is_nullable, column_default
+                   FROM information_schema.columns
+                   WHERE table_schema = %s AND table_name = %s
+                   ORDER BY ordinal_position""",
+                (schema, table),
+            )
+            return [dict(row) for row in cur.fetchall()]
+
+    def fetch_rows(self, schema: str, table: str) -> list[dict]:
+        with self._conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(f'SELECT * FROM "{schema}"."{table}" LIMIT 100')
+            return [dict(row) for row in cur.fetchall()]
+
     def execute_dml(self, sql: str, params: dict) -> None:
         with self._conn.cursor() as cur:
             cur.execute(sql, params)

@@ -45,6 +45,7 @@ export function Dashboard() {
         <nav className="flex gap-4 text-sm text-gray-600">
           <a href="/" className="font-medium text-blue-600">Dashboard</a>
           <a href="/snapshots" className="hover:text-gray-900">Snapshots</a>
+          <a href="/playground" className="hover:text-gray-900">Playground</a>
           <a href="/history" className="hover:text-gray-900">History</a>
         </nav>
       </header>
