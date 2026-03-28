@@ -1,0 +1,34 @@
+[
+  {
+    "account_id": 1,
+    "account_code": "ACC-001",
+    "account_name": "Apex Financial",
+    "status": "ACTIVE",
+    "credit_limit": 50000.00,
+    "account_type": "PREMIUM"
+  },
+  {
+    "account_id": 2,
+    "account_code": "ACC-002",
+    "account_name": "Beacon Corp",
+    "status": "ACTIVE",
+    "credit_limit": 25000.00,
+    "account_type": "STANDARD"
+  },
+  {
+    "account_id": 3,
+    "account_code": "ACC-003",
+    "account_name": "Crest Holdings",
+    "status": "SUSPENDED",
+    "credit_limit": 10000.00,
+    "account_type": "STANDARD"
+  },
+  {
+    "account_id": 4,
+    "account_code": "ACC-004",
+    "account_name": "Delta Ventures",
+    "status": "ACTIVE",
+    "credit_limit": 75000.00,
+    "account_type": "ENTERPRISE"
+  }
+]

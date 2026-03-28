@@ -1,0 +1,26 @@
+[
+  {
+    "rule_id": 1,
+    "rule_code": "RULE-FEE-01",
+    "description": "Late payment fee 2%",
+    "rate": 0.02,
+    "applies_to": "STANDARD",
+    "enabled": true
+  },
+  {
+    "rule_id": 2,
+    "rule_code": "RULE-DISC-01",
+    "description": "Premium discount 5%",
+    "rate": 0.05,
+    "applies_to": "PREMIUM",
+    "enabled": true
+  },
+  {
+    "rule_id": 3,
+    "rule_code": "RULE-CAP-01",
+    "description": "Enterprise credit cap override",
+    "rate": 0.00,
+    "applies_to": "ENTERPRISE",
+    "enabled": false
+  }
+]

@@ -1,0 +1,38 @@
+[
+  {
+    "customer_id": 1,
+    "account_id": 1,
+    "first_name": "Alice",
+    "last_name": "Morgan",
+    "email": "alice@apex.com",
+    "tier": "GOLD",
+    "active": true
+  },
+  {
+    "customer_id": 2,
+    "account_id": 2,
+    "first_name": "Bob",
+    "last_name": "Chen",
+    "email": "bob@beacon.com",
+    "tier": "SILVER",
+    "active": true
+  },
+  {
+    "customer_id": 3,
+    "account_id": 1,
+    "first_name": "Carol",
+    "last_name": "Park",
+    "email": "carol@apex.com",
+    "tier": "BRONZE",
+    "active": true
+  },
+  {
+    "customer_id": 4,
+    "account_id": 3,
+    "first_name": "Dan",
+    "last_name": "Ellis",
+    "email": "dan@crest.com",
+    "tier": "SILVER",
+    "active": false
+  }
+]

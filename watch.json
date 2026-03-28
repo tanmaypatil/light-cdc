@@ -1,0 +1,85 @@
+{
+  "version": "1",
+  "environments": [
+    {
+      "name": "dev",
+      "db_type": "postgres",
+      "connection_env_var": "DEV_DATABASE_URL",
+      "poll_interval_seconds": 120,
+      "retention": {
+        "max_days": 30,
+        "max_size_mb": 500
+      },
+      "tables": [
+        {
+          "schema": "public",
+          "table": "accounts",
+          "primary_key": ["account_id"],
+          "exclude_columns": ["updated_at"],
+          "enabled": true
+        },
+        {
+          "schema": "public",
+          "table": "customers",
+          "primary_key": ["customer_id"],
+          "exclude_columns": [],
+          "enabled": true
+        },
+        {
+          "schema": "public",
+          "table": "rules",
+          "primary_key": ["rule_id"],
+          "exclude_columns": [],
+          "enabled": true
+        },
+        {
+          "schema": "public",
+          "table": "memberships",
+          "primary_key": ["membership_id"],
+          "exclude_columns": [],
+          "enabled": true
+        }
+      ]
+    },
+    {
+      "name": "qa",
+      "db_type": "postgres",
+      "connection_env_var": "QA_DATABASE_URL",
+      "poll_interval_seconds": 1800,
+      "retention": {
+        "max_days": 14,
+        "max_size_mb": 200
+      },
+      "tables": [
+        {
+          "schema": "public",
+          "table": "accounts",
+          "primary_key": ["account_id"],
+          "exclude_columns": ["updated_at"],
+          "enabled": true
+        },
+        {
+          "schema": "public",
+          "table": "customers",
+          "primary_key": ["customer_id"],
+          "exclude_columns": [],
+          "enabled": true
+        },
+        {
+          "schema": "public",
+          "table": "rules",
+          "primary_key": ["rule_id"],
+          "exclude_columns": [],
+          "enabled": true
+        },
+        {
+          "schema": "public",
+          "table": "memberships",
+          "primary_key": ["membership_id"],
+          "exclude_columns": [],
+          "enabled": true
+        }
+      ]
+    }
+  ]
+}
