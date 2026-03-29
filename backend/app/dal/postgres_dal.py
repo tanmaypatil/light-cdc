@@ -53,15 +53,14 @@ class PostgresDAL(BaseDAL):
             return cur.fetchone()[0]
 
     def fetch_table_checksum(self, schema: str, table: str, primary_key: list[str]) -> str:
-        # XOR-aggregate of per-row hashes; stable across row order
-        pk_concat = " || '|' || ".join(f'CAST("{c}" AS TEXT)' for c in primary_key)
+        # XOR-aggregate of full-row hashes; stable across row order, sensitive to any column change
         with self._conn.cursor() as cur:
             cur.execute(
                 f"""SELECT COALESCE(
-                      CAST(BIT_XOR(HASHTEXT({pk_concat}::TEXT)::BIT(32)) AS TEXT),
+                      CAST(BIT_XOR(HASHTEXT(ROW(t.*)::TEXT)::BIT(32)) AS TEXT),
                       '0'
                     )
-                    FROM "{schema}"."{table}" """,
+                    FROM "{schema}"."{table}" t""",
             )
             return cur.fetchone()[0]
 

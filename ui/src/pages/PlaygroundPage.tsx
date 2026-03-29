@@ -8,11 +8,14 @@ import { autocompletion, closeBrackets } from "@codemirror/autocomplete";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { api } from "../api/client";
 
-const ENV_OPTIONS = ["dev", "qa"];
-
 type ResultRow = Record<string, unknown>;
 
 export function PlaygroundPage() {
+  const { data: environments } = useQuery({
+    queryKey: ["environments"],
+    queryFn: api.getEnvironments,
+  });
+
   const [env, setEnv] = useState("dev");
   const [result, setResult] = useState<{
     rows?: ResultRow[];
@@ -138,7 +141,9 @@ export function PlaygroundPage() {
               onChange={(e) => { setEnv(e.target.value); setResult(null); }}
               className="text-xs border border-gray-300 rounded px-2 py-1 bg-white"
             >
-              {ENV_OPTIONS.map((e) => <option key={e} value={e}>{e}</option>)}
+              {(environments ?? [{ name: env }]).map((e) => (
+                <option key={e.name} value={e.name}>{e.name}</option>
+              ))}
             </select>
           </div>
           {tables.length === 0 ? (
