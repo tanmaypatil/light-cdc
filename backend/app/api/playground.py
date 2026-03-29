@@ -104,3 +104,82 @@ def update_row(env: str, table: str, payload: RowPayload):
         raise HTTPException(status_code=400, detail=str(e))
     finally:
         dal.close()
+
+
+@router.get("/environments/{env}/playground/schema")
+def get_playground_schema(env: str):
+    """Return schema for all watched tables in one call (for autocomplete)."""
+    watch_config = WatchConfig.load(settings.watch_config_path)
+    env_config = watch_config.get_environment(env)
+    if not env_config:
+        raise HTTPException(status_code=404, detail=f"Environment '{env}' not found")
+
+    connection_url = os.environ.get(env_config.connection_env_var)
+    if not connection_url:
+        raise HTTPException(status_code=500, detail=f"Env var '{env_config.connection_env_var}' not set")
+
+    dal = BaseDAL.from_config(env_config, connection_url)
+    try:
+        result = {}
+        for table_cfg in env_config.enabled_tables():
+            schema = dal.fetch_table_schema(table_cfg.schema_name, table_cfg.table)
+            result[table_cfg.table] = {
+                "schema": schema,
+                "primary_key": table_cfg.primary_key,
+            }
+        return {"environment": env, "tables": result}
+    finally:
+        dal.close()
+
+
+class SqlPayload(BaseModel):
+    sql: str
+
+
+_ALLOWED_STMTS = ("insert", "update", "delete", "select")
+
+
+@router.post("/environments/{env}/playground/execute")
+def execute_sql(env: str, payload: SqlPayload):
+    """Execute a raw SQL statement (DML/SELECT only) against the environment DB."""
+    stmt = payload.sql.strip()
+    if not stmt:
+        raise HTTPException(status_code=400, detail="Empty SQL")
+
+    # Skip leading comment lines to find the actual statement type
+    non_comment_lines = [
+        line for line in stmt.splitlines()
+        if line.strip() and not line.strip().startswith("--")
+    ]
+    if not non_comment_lines:
+        raise HTTPException(status_code=400, detail="Empty SQL")
+    first_word = non_comment_lines[0].split()[0].lower()
+    if first_word not in _ALLOWED_STMTS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Only {', '.join(w.upper() for w in _ALLOWED_STMTS)} statements are allowed",
+        )
+
+    watch_config = WatchConfig.load(settings.watch_config_path)
+    env_config = watch_config.get_environment(env)
+    if not env_config:
+        raise HTTPException(status_code=404, detail=f"Environment '{env}' not found")
+
+    connection_url = os.environ.get(env_config.connection_env_var)
+    if not connection_url:
+        raise HTTPException(status_code=500, detail=f"Env var '{env_config.connection_env_var}' not set")
+
+    dal = BaseDAL.from_config(env_config, connection_url)
+    try:
+        if first_word == "select":
+            rows = dal.fetch_raw(stmt)
+            return {"rows": rows, "row_count": len(rows)}
+        else:
+            affected = dal.execute_dml(stmt, {})
+            return {"message": "OK", "rows_affected": affected}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    finally:
+        dal.close()

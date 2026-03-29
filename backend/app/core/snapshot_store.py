@@ -96,6 +96,37 @@ class SnapshotStore:
         ]
 
     # ------------------------------------------------------------------
+    # Per-table poll state  (large-table optimisation)
+    # ------------------------------------------------------------------
+
+    def get_table_poll_state(self, table_name: str) -> dict | None:
+        """Return {last_polled_at, last_checksum, last_row_count} or None if first poll."""
+        with get_connection(self._db_path) as conn:
+            row = conn.execute(
+                "SELECT last_polled_at, last_checksum, last_row_count FROM table_poll_state WHERE table_name=?",
+                (table_name,),
+            ).fetchone()
+        return dict(row) if row else None
+
+    def save_table_poll_state(
+        self,
+        table_name: str,
+        last_polled_at: str,
+        last_checksum: str | None,
+        last_row_count: int,
+    ) -> None:
+        with get_connection(self._db_path) as conn:
+            conn.execute(
+                """INSERT INTO table_poll_state (table_name, last_polled_at, last_checksum, last_row_count)
+                   VALUES (?, ?, ?, ?)
+                   ON CONFLICT(table_name) DO UPDATE SET
+                     last_polled_at=excluded.last_polled_at,
+                     last_checksum=excluded.last_checksum,
+                     last_row_count=excluded.last_row_count""",
+                (table_name, last_polled_at, last_checksum, last_row_count),
+            )
+
+    # ------------------------------------------------------------------
     # Change events
     # ------------------------------------------------------------------
 

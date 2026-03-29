@@ -1,5 +1,14 @@
 -- Business tables watched by the CDC agent
 
+-- Trigger function: auto-update updated_at on any row change
+CREATE OR REPLACE FUNCTION set_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 CREATE TABLE IF NOT EXISTS accounts (
     account_id   SERIAL PRIMARY KEY,
     account_code VARCHAR(20)    NOT NULL UNIQUE,
@@ -9,6 +18,10 @@ CREATE TABLE IF NOT EXISTS accounts (
     account_type VARCHAR(20)    NOT NULL DEFAULT 'STANDARD',
     updated_at   TIMESTAMP      NOT NULL DEFAULT NOW()
 );
+
+CREATE OR REPLACE TRIGGER accounts_updated_at
+BEFORE UPDATE ON accounts
+FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
 CREATE TABLE IF NOT EXISTS customers (
     customer_id INTEGER PRIMARY KEY,

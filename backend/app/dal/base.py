@@ -20,6 +20,26 @@ class BaseDAL(ABC):
         """Return all rows from schema.table, excluding specified columns."""
 
     @abstractmethod
+    def fetch_table_since(
+        self,
+        schema: str,
+        table: str,
+        exclude_columns: list[str],
+        updated_at_col: str,
+        since: str,
+    ) -> list[dict]:
+        """Return rows where updated_at_col > since (ISO-8601 string). Used for large-table incremental polling."""
+
+    @abstractmethod
+    def fetch_row_count(self, schema: str, table: str) -> int:
+        """Return the current row count for schema.table."""
+
+    @abstractmethod
+    def fetch_table_checksum(self, schema: str, table: str, primary_key: list[str]) -> str:
+        """Return a scalar checksum representing the current state of the table.
+        Used as a cheap gate: if unchanged since last poll, skip full fetch."""
+
+    @abstractmethod
     def fetch_table_schema(self, schema: str, table: str) -> list[dict]:
         """Return column metadata from information_schema."""
 
@@ -28,8 +48,12 @@ class BaseDAL(ABC):
         """Return up to 100 rows from schema.table."""
 
     @abstractmethod
-    def execute_dml(self, sql: str, params: dict) -> None:
-        """Execute a single DML statement (UPDATE / INSERT / DELETE) for rollback."""
+    def fetch_raw(self, sql: str) -> list[dict]:
+        """Execute a raw SELECT and return rows as dicts."""
+
+    @abstractmethod
+    def execute_dml(self, sql: str, params: dict) -> int:
+        """Execute a single DML statement; return rows affected."""
 
     @abstractmethod
     def test_connection(self) -> bool:
@@ -47,5 +71,6 @@ class BaseDAL(ABC):
         if env_config.db_type == "postgres":
             return PostgresDAL(connection_url)
         if env_config.db_type == "oracle":
-            raise NotImplementedError("Oracle DAL is not yet implemented")
+            from app.dal.oracle_dal import OracleDAL
+            return OracleDAL(connection_url)
         raise ValueError(f"Unknown db_type: {env_config.db_type}")

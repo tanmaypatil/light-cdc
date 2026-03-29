@@ -18,6 +18,10 @@ class TableConfig(BaseModel):
     primary_key: list[str]
     exclude_columns: list[str] = []
     enabled: bool = True
+    # Large-table optimisation: use updated_at column for incremental fetches
+    updated_at_column: str | None = None
+    # Row count above which incremental/checksum strategy is used instead of full scan
+    large_table_threshold: int | None = None
 
     model_config = {"populate_by_name": True}
 
@@ -28,6 +32,8 @@ class EnvironmentConfig(BaseModel):
     connection_env_var: str
     poll_interval_seconds: int = 1800
     retention: RetentionConfig = Field(default_factory=RetentionConfig)
+    # Default large-table threshold for all tables in this env (per-table overrides this)
+    large_table_threshold: int = 1000
     tables: list[TableConfig]
 
     def enabled_tables(self) -> list[TableConfig]:

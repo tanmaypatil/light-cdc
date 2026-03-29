@@ -49,21 +49,20 @@ export const api = {
       .then((r) => r.data),
 
   // Playground
-  getTableSchema: (env: string, table: string) =>
-    http.get<{ table: string; schema: { column_name: string; data_type: string; is_nullable: string; column_default: string | null }[]; primary_key: string[] }>(
-      `/environments/${env}/tables/${table}/schema`
+  getPlaygroundSchema: (env: string) =>
+    http.get<{
+      environment: string;
+      tables: Record<string, {
+        schema: { column_name: string; data_type: string; is_nullable: string; column_default: string | null }[];
+        primary_key: string[];
+      }>;
+    }>(`/environments/${env}/playground/schema`).then((r) => r.data),
+
+  executeSQL: (env: string, sql: string) =>
+    http.post<{ rows?: Record<string, unknown>[]; row_count?: number; message?: string; rows_affected?: number }>(
+      `/environments/${env}/playground/execute`,
+      { sql }
     ).then((r) => r.data),
-
-  getTableRows: (env: string, table: string) =>
-    http.get<{ table: string; rows: Record<string, unknown>[] }>(
-      `/environments/${env}/tables/${table}/rows`
-    ).then((r) => r.data),
-
-  insertRow: (env: string, table: string, data: Record<string, unknown>) =>
-    http.post(`/environments/${env}/tables/${table}/rows`, { data }).then((r) => r.data),
-
-  updateRow: (env: string, table: string, data: Record<string, unknown>) =>
-    http.put(`/environments/${env}/tables/${table}/rows`, { data }).then((r) => r.data),
 
   // History
   getHistoryStats: (env: string) =>

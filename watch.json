@@ -16,6 +16,8 @@
           "table": "accounts",
           "primary_key": ["account_id"],
           "exclude_columns": ["updated_at"],
+          "updated_at_column": "updated_at",
+          "large_table_threshold": 25,
           "enabled": true
         },
         {

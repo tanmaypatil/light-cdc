@@ -21,7 +21,14 @@ These are low volume tables but slight change results into side effects into app
  * The DAL must expose a schema introspection method (e.g. fetch_table_schema) that returns column names and types.
  * This is used by the diff engine, rollback engine, and UI diff viewer.
  
-## History 
+## Playground
+ * SQL editor (CodeMirror) with PostgreSQL syntax highlighting and column autocomplete.
+ * Autocomplete is powered by live schema introspection from watch.json tables.
+ * Schema sidebar shows all watched tables with column names, types, and PK markers.
+ * Supports SELECT, INSERT, UPDATE, DELETE — DDL is blocked.
+ * After DML, automatically triggers a CDC poll so the change is captured immediately.
+
+## History
 * History would be per environment .  
 * Keep history only for specified days or when change data becomes over threshold.
 * would also want handle to completely purge the history for a env name
@@ -31,6 +38,15 @@ These are low volume tables but slight change results into side effects into app
   * Tables to seed: accounts, customers, rules, memberships (and similar business tables).
   * Only a few records per table are needed — enough to observe CDC capturing inserts, updates, and deletes.
   * Periodic updates to these records simulate real change activity for testing.
+
+## Large table strategy
+ * Tables with row count ≤ `large_table_threshold` (default 1000, per-table override in watch.json): full scan every poll.
+ * Tables above threshold with `updated_at_column` set: incremental fetch — only rows where that column > last poll time.
+   * Delete sentinel: if row count drops since last poll, a full scan is triggered automatically to catch deletes.
+ * Tables above threshold without `updated_at_column`: checksum gate — one aggregate query; full fetch only when checksum changes.
+ * `updated_at_column` name and data type vary by environment (dev/qa may differ from each other, and Oracle will differ from Postgres).
+   Configure the correct column name per table in watch.json. The DAL handles type differences internally.
+ * Oracle support is deferred until Postgres deployment is complete and tested. `updated_at_column` will be updated in watch.json at that point.
 
 ## Deployment
   * Target deployment is Azure Kubernetes Service ( AKS ) with a full CI/CD pipeline.

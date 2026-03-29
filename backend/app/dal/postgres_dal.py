@@ -28,6 +28,43 @@ class PostgresDAL(BaseDAL):
         exclude_set = set(exclude_columns)
         return [{k: v for k, v in row.items() if k not in exclude_set} for row in rows]
 
+    def fetch_table_since(
+        self,
+        schema: str,
+        table: str,
+        exclude_columns: list[str],
+        updated_at_col: str,
+        since: str,
+    ) -> list[dict]:
+        with self._conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(
+                f'SELECT * FROM "{schema}"."{table}" WHERE "{updated_at_col}" > %s',
+                (since,),
+            )
+            rows = cur.fetchall()
+        if not exclude_columns:
+            return [dict(row) for row in rows]
+        exclude_set = set(exclude_columns)
+        return [{k: v for k, v in row.items() if k not in exclude_set} for row in rows]
+
+    def fetch_row_count(self, schema: str, table: str) -> int:
+        with self._conn.cursor() as cur:
+            cur.execute(f'SELECT COUNT(*) FROM "{schema}"."{table}"')
+            return cur.fetchone()[0]
+
+    def fetch_table_checksum(self, schema: str, table: str, primary_key: list[str]) -> str:
+        # XOR-aggregate of per-row hashes; stable across row order
+        pk_concat = " || '|' || ".join(f'CAST("{c}" AS TEXT)' for c in primary_key)
+        with self._conn.cursor() as cur:
+            cur.execute(
+                f"""SELECT COALESCE(
+                      CAST(BIT_XOR(HASHTEXT({pk_concat}::TEXT)::BIT(32)) AS TEXT),
+                      '0'
+                    )
+                    FROM "{schema}"."{table}" """,
+            )
+            return cur.fetchone()[0]
+
     def fetch_table_schema(self, schema: str, table: str) -> list[dict]:
         with self._conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
             cur.execute(
@@ -44,10 +81,17 @@ class PostgresDAL(BaseDAL):
             cur.execute(f'SELECT * FROM "{schema}"."{table}" LIMIT 100')
             return [dict(row) for row in cur.fetchall()]
 
-    def execute_dml(self, sql: str, params: dict) -> None:
+    def fetch_raw(self, sql: str) -> list[dict]:
+        with self._conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(sql)
+            return [dict(row) for row in cur.fetchall()]
+
+    def execute_dml(self, sql: str, params: dict) -> int:
         with self._conn.cursor() as cur:
-            cur.execute(sql, params)
+            cur.execute(sql, params or None)
+            affected = cur.rowcount
         self._conn.commit()
+        return affected
 
     def test_connection(self) -> bool:
         try:
